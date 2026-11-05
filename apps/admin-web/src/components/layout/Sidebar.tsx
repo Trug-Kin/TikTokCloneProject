@@ -58,12 +58,13 @@ export function Sidebar({ currentTab, onTabChange, mobileOpen, onMobileClose }: 
         <div className="flex flex-col h-full py-6 px-3">
           <div className="flex items-center justify-between px-4 mb-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
-                <img src={logoImg} alt="Nông Video Logo" className="w-full h-full object-cover" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <img src={logoImg} alt="ViFarm Logo" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                <span className="text-xl">🌱</span>
               </div>
               <div>
-                <h1 className="font-headline text-2xl font-bold text-primary">Nông Video</h1>
-                <p className="font-label text-xs text-on-surface-variant">Hệ thống quản trị</p>
+                <h1 className="font-headline text-2xl font-bold text-primary">ViFarm Admin</h1>
+                <p className="font-label text-xs text-on-surface-variant">Quản trị Nông Nghiệp</p>
               </div>
             </div>
             <button
