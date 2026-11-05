@@ -9,10 +9,10 @@ import {
   Settings,
   LogOut,
   X,
+  Sprout,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../auth-provider';
-import logoImg from '../../assets/logo.png';
 
 interface SidebarProps {
   currentTab: string;
@@ -58,9 +58,8 @@ export function Sidebar({ currentTab, onTabChange, mobileOpen, onMobileClose }: 
         <div className="flex flex-col h-full py-6 px-3">
           <div className="flex items-center justify-between px-4 mb-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-primary/10 border border-primary/20 flex items-center justify-center">
-                <img src={logoImg} alt="ViFarm Logo" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
-                <span className="text-xl">🌱</span>
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 shadow-sm">
+                <Sprout className="w-6 h-6 text-emerald-500" />
               </div>
               <div>
                 <h1 className="font-headline text-2xl font-bold text-primary">ViFarm Admin</h1>
