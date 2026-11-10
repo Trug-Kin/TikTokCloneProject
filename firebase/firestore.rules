@@ -10,12 +10,34 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isAdminOrModerator() {
-      return isSignedIn() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'moderator']);
+    function getUserRole() {
+      return exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role
+        : (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+            : 'user');
     }
 
-    // 1. Users collection
+    function isAdminOrModerator() {
+      return isSignedIn() && (getUserRole() in ['admin', 'moderator']);
+    }
+
+    // 1. Profiles & Users collection
+    match /profiles/{userId} {
+      allow read: if true;
+      allow create, update: if isOwner(userId) || isAdminOrModerator();
+      allow delete: if isAdminOrModerator();
+
+      match /public_videos/{videoId} {
+        allow read: if true;
+        allow write: if isOwner(userId) || isAdminOrModerator();
+      }
+
+      match /saved_techniques/{videoId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
     match /users/{userId} {
       allow read: if true;
       allow create, update: if isOwner(userId) || isAdminOrModerator();
@@ -26,24 +48,38 @@ service cloud.firestore {
       }
     }
 
-    // 2. Stores collection (Gian hàng)
+    // 2. Stores collection (Gian hàng & Audit Logs)
     match /stores/{storeId} {
-      allow read: if resource.data.status == 'approved' ||
-                  (isSignedIn() && resource.data.ownerId == request.auth.uid) ||
-                  isAdminOrModerator();
+      allow read: if true;
       allow create: if isSignedIn();
-      allow update: if (isSignedIn() && resource.data.ownerId == request.auth.uid) || isAdminOrModerator();
+      allow update: if isSignedIn();
       allow delete: if isAdminOrModerator();
+
+      match /audit_logs/{logId} {
+        allow read: if isSignedIn();
+        allow create, update: if isSignedIn();
+      }
     }
 
-    // 3. Videos collection
+    // 3. Videos & Video Summaries & Hashtags collection
     match /videos/{videoId} {
-      allow read: if resource.data.moderationStatus == 'approved' ||
-                  resource.data.isPublic == true ||
-                  (isSignedIn() && resource.data.authorId == request.auth.uid) ||
-                  isAdminOrModerator();
+      allow read: if true;
       allow create: if isSignedIn();
       allow update, delete: if (isSignedIn() && resource.data.authorId == request.auth.uid) || isAdminOrModerator();
+    }
+
+    match /video_summaries/{videoId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /hashtags/{hashtagId} {
+      allow read: if true;
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /copyright_moderation_queue/{queueId} {
+      allow read, write: if isSignedIn();
     }
 
     // 4. Journals collection
@@ -63,9 +99,7 @@ service cloud.firestore {
 
     // 5. Products collection
     match /products/{productId} {
-      allow read: if resource.data.status == 'active' ||
-                  (isSignedIn() && resource.data.sellerId == request.auth.uid) ||
-                  isAdminOrModerator();
+      allow read: if true;
       allow create: if isSignedIn();
       allow update, delete: if (isSignedIn() && resource.data.sellerId == request.auth.uid) || isAdminOrModerator();
     }
@@ -77,18 +111,33 @@ service cloud.firestore {
 
     // 7. Quote Requests collection
     match /quote_requests/{quoteId} {
-      allow read, write: if isSignedIn() &&
-        (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid);
+      allow read, write: if isSignedIn();
       allow create: if isSignedIn();
     }
 
     // 8. Orders collection
     match /orders/{orderId} {
-      allow read: if isSignedIn() &&
-        (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid || isAdminOrModerator());
+      allow read: if isSignedIn();
       allow create: if isSignedIn();
-      allow update: if isSignedIn() &&
-        (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid || isAdminOrModerator());
+      allow update: if isSignedIn();
+    }
+
+    // 9. Ads & Analytics collection
+    match /ads/{adId} {
+      allow read: if true;
+      allow write: if isAdminOrModerator();
+    }
+
+    match /ad_impressions/{id} {
+      allow read, write: if true;
+    }
+
+    match /ad_views/{id} {
+      allow read, write: if true;
+    }
+
+    match /ad_clicks/{id} {
+      allow read, write: if true;
     }
   }
 }
